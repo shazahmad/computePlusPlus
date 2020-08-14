@@ -144,23 +144,26 @@ As we have seen in previous sections that throughput required for 60FPS 1080p HD
 Acceleration Factor to Meet 60FPS Performance = 355/1.33 = 266x
 Acceleration Factor to Meet SW Performance    = 14.5/1.33 = 10.9x
 ```
-### Optimized Hardware Implementation
-From the above calculations it is clear that we need to improve the performance of baseline hardware implementation by 266x to meet the performance. One of the path we can take is to start unrolling the inner loops and pipeline. For example by unrolling the inner most loop which iterated 15 times we can improve the performance by 15x. With that the performance will be better than software only implementation but still we cannot meet required video performance. Another approach that we can follows is to unroll the inner two loops and hence gain in performance by 15*15=225. The performance and memory bandwidth requirements will be as follows:
+### Performance Estimation for Optimized Hardware Implementation
+From the above calculations it is clear that we need to improve the performance of baseline hardware implementation by 266x to meet the performance. One of the path we can take is to start unrolling the inner loops and pipeline. For example by unrolling the inner most loop which iterated 15 times we can improve the performance by 15x. With that the performance will be better than software only implementation but still we cannot meet required video performance. Another approach that we can follows is to unroll the inner two loops and hence gain in performance by 15*15=225 which means  a throughput  of 1-output pixel per cycle. The performance and memory bandwidth requirements will be as follows:
 ```bash
-    Throughput  = 225 * 1.33(baseline perf.) = 299.25 MB/s
-    Output Memory Bandwidth =  299.25 MB/s
-    Input Memory Bandwidth =  299.25 * 225 = 67.33 GB/s
+    Throughput  = 300/1 = 300 MB/s
+    Output Memory Bandwidth =  300 MB/s
+    Input Memory Bandwidth =  300 * 225 = 67.5 GB/s
 ```
 
 The required output memory bandwidth scales linearly with throughput but input memory bandwidth has gone up enormously and might not be sustainable. But a closer look at the convolution filter will reveal that it is not required to read all 225(15x15) pixels from the input memory for processing. A clever caching scheme can be built to avoid such extensive use of input memory bandwidth. The convolutional filter belongs to a class kernels known as stencil kernels which can be optimized to increase input data use extensively. Which can result in substantially reduced memory bandwidth   requirements. Actually with a caching scheme we can bring the input bandwidth requirement to be same as output which is around 300 MB/s. When both inner loops are unrolled it will require that only 1-input pixel is read for producing one output pixel on average.
-Given that we can bring down the input bandwidth the achieved performance will be 299.25 MB/s, which is lower than 355. To deal with this we can look for other ways to increase throughput of hardware or follow a simple approach of duplicating hardware. Said in heterogeneous computing terminology we can increase the number of compute units which can process data in parallel,in case of video we can process color channels separately.   
+Given that we can bring down the input bandwidth the achieved performance will be 300 MB/s, which is lower than required 355 MB/s. To deal with this we can look for other ways to increase throughput of hardware or follow a simple approach of duplicating hardware. Said in heterogeneous computing terminology we can increase the number of compute units which can process data in parallel,in case of video we can process color channels separately on separate compute units. Assuming that we will use 3 compute unit one for each color channel, the expected performance summary will be as follows:
+```bash
+ Throughput(estimated)  =  300 x 3 = 900 MB/s
+ Acceleration Against Software Implementation = 900/14.5 = 62x
+ Kernel Latecny ( per image on any color channel ) = (1920*1080) / 300 = 6.9 ms
+ Video Processing Rate = 144  FPS   
+```
 
- 
-      
-Lab 1: ( Application intro , software performance and hardware performance estimation)
+Given these performance numbers and architecture selection or implementation next lab will show how we can embark on the design of kernel hardware and finally end up with an accelerated application that provides a performance that is very close to the estimates.
 
-    Introduction to convolution video filter
-    Video Specification
-    measurements using timers.
-    Setting throughput goals
-    Estimating the accelerator performance
+In this lab you learnt about:
+- Basics of convolution filter
+- Profiled the performance of software only implementation
+- Estimated the performance and requirements for hardware implementation
