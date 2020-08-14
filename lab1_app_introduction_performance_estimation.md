@@ -155,7 +155,8 @@ From the above calculations it is clear that we need to improve the performance 
 The required output memory bandwidth scales linearly with throughput but input memory bandwidth has gone up enormously and might not be sustainable. But a closer look at the convolution filter will reveal that it is not required to read all 225(15x15) pixels from the input memory for processing. A clever caching scheme can be built to avoid such extensive use of input memory bandwidth. The convolutional filter belongs to a class kernels known as stencil kernels which can be optimized to increase input data use extensively. Which can result in substantially reduced memory bandwidth   requirements. Actually with a caching scheme we can bring the input bandwidth requirement to be same as output which is around 300 MB/s. When both inner loops are unrolled it will require that only 1-input pixel is read for producing one output pixel on average.
 Given that we can bring down the input bandwidth the achieved performance will be 299.25 MB/s, which is lower than 355. To deal with this we can look for other ways to increase throughput of hardware or follow a simple approach of duplicating hardware. Said in heterogeneous computing terminology we can increase the number of compute units which can process data in parallel,in case of video we can process color channels separately.   
 
-
+ 
+      
 Lab 1: ( Application intro , software performance and hardware performance estimation)
 
     Introduction to convolution video filter
