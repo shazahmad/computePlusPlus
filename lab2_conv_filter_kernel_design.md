@@ -5,7 +5,7 @@ This section discuses the design of convolution filter in detail. It goes throug
 ### Top Level Structure of Kernel
 The top level of convolution filter is modeled dataflow process consisting of four different functions as given below, for full implementation details you can refer to source file that is in **"src/filter2d_hw.cpp"**.
 
-```bash
+```cpp
 void Filter2DKernel(
         const char           coeffs[256],
         float                factor,
