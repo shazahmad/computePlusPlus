@@ -67,15 +67,51 @@ The Windows2D block is essentially built from two basic blocks, one is a line bu
  
    ![](images/Window2D.jpg) 
  
- The figure above illustrates the operation and requirements for a line and widow buffer. The images size is assumed 8x8 and the filter size is 3x3. Assume we are generating output pixel number 10, for this what we need is 3x3 block of input pixels centered around it as shown by step "A". Step B in figure highlights what is required for producing pixel number 11 again a 3x3 block but it has a significant overlap with previous input block. Essentially a column moves out from left and a column moves in from right. One important thing to identify between steps A,B and C is that from input side it only needs one new pixel to produce one output (ignoring the initially latency of filling line buffer with multiple pixels which is one time only). Give all these observations Window2D is implemented using a line buffer which holds FILTER_V_SIZE-1 lines ( In general it requires FILTER_V_SIZE lines but a line is reduced by using line buffer in circular fashion and by exploiting the fact that pixels at the start of first line buffer can be used to write new in-coming pixels since they are no longer needed). The window buffer is implemented as FILTER_V_SIZE * FILTER_H_SIZE storage fully partitioned. The data moves as a column vector of size FILTER_V_SIZE from line buffer to window buffer and then this whole widow is passed through a stream to Filter2D function for processing. The overall scheme (data mover) is built to maximize the data re-usa providing maximum parallel data to processing element.
+ The figure above illustrates the operation and requirements for a line and widow buffer. The images size is assumed 8x8 and the filter size is 3x3. Assume we are generating output pixel number 10, for this what we need is 3x3 block of input pixels centered around it as shown by step "A". Step B in figure highlights what is required for producing pixel number 11 again a 3x3 block but it has a significant overlap with previous input block. Essentially a column moves out from left and a column moves in from right. One important thing to identify between steps A,B and C is that from input side it only needs one new pixel to produce one output (ignoring the initially latency of filling line buffer with multiple pixels which is one time only). Give all these observations Window2D is implemented using a line buffer which holds FILTER_V_SIZE-1 lines ( In general it requires FILTER_V_SIZE lines but a line is reduced by using line buffer in circular fashion and by exploiting the fact that pixels at the start of first line buffer can be used to write new in-coming pixels since they are no longer needed). The window buffer is implemented as FILTER_V_SIZE * FILTER_H_SIZE storage fully partitioned. The data moves as a column vector of size FILTER_V_SIZE from line buffer to window buffer and then this whole widow is passed through a stream to Filter2D function for processing. The overall scheme (data mover) is built to maximize the data re-usa providing maximum parallel data to processing element. To have a deeper understanding on the modeling style and minute details of data mover please have a look at the Window2D function implementation details in provided source code file named "filter2d_hw.cpp".
  
+ ## Building and Simulating the Kernel using Vitis HLS
+ In this section we will build and simulate the 2D convolution filter using Vitis HLs and also look at the performance estimates and measured results after co-simulation for comparison with target performance settings. 
+ ### Building Kernel Module
+ Here you will build kernel module as an isolated module with AXI interfaces to memory and also simulate it. To do this please follow the steps listed below:
  
-        
-Lab 2:  ( Using bottom up flow design a kernel, estimate its performance)
+ ```bash
+    cd  hls_build
+    vitis_hls -f build.tcl 
+```
+An output similar to the following will be printed:
+```bash
+    ----------------------------------------------------------------------------
+    HLS Testbench for Xilinx 2D Filter Example
+    Image info
+    - Width     :       1000
+    - Height    :         30
+    - Stride    :       1024
+    - Bytes     :      30720
+    Running FPGA accelerator
+    Comparing results
+    Test PASSED: Output matches reference
+    ----------------------------------------------------------------------------
+    INFO: [COSIM 212-1000] *** C/RTL co-simulation finished: PASS ***
+```
+which shows an image with Width=1000 and height=30 is simulated. There are default parameter for image dimensions and kept as small values to make co-simulation run in reasonable time and not take too long. The synthesis is done for a max. image size of 1020x1080.
+ Once the build and simulation is finished launch Vitis HLS GUI to analyze the performance estimates reports and implementation QoR as follows:
+ 
+```bash
+vitis_hls -p 
+ ```
+After GUI opens first thing to notice is the resource consumption report as shown below:
+   ![](images/vitisHlsResourceReport.jpg) 
 
-    Synthesizing software like kernel vs. Optimized kernel
-    Coding the kernel
-    Post synthesis analysis and other vitis_hls features that can be useful for bottom up flow
-    >>Simulating the kernel if possible 
-    Discuss harware optimization applicable to kernel.
-    Compare kernel based on line-buffer vs. simple buffer
+It shows that usage of 139 DSP essentially for SOP by top level module and also notice the use of 14 BRAMs by Window2D data mover block. One important thing to notice is the static performance estimate for kernel which is 7.3 ms , very close to the estimated target latency for kernel which was 6.9 ms as calculated in previous lab. Another thing that we can use to get an accurate measurement of latency for kernel is to have a look at the co-simulation report.  You can go to reports menu in Vitis HLS and open co-simulation report it will show something as follows:
+    ![](images/vitisHLSCosimReport.jpg) 
+
+
+Since we are simulating and image of 1000x30 so expected latency should be: 30,000 + fixed latency of some blocks. The number shown in the report is 38,520. Here 8520 is the fixed latency and when the image size is actually 1920x1080 it will get amortized on more number of image lines. The fact that large image will amortize the latency can be verified by simulating with larger image. Another thing that verifies that the kernel can achieve 1 output sampler per cycle throughput is loop initiation intervals. The synthesis report expanded view shows this below( all loops have II=1):
+    ![](images/vitisHLSIIReport.jpg)
+
+Once we have verified the throughput requirements are met and the resource consumption is acceptable we can move forward and start integrating the whole system. Which will consists of host application to drive the kernel and actually kernel building using one of the Xilinx platform for Alveo Data center cards.
+
+In this lab you learnt about:
+- Optimized implementation of convolution filter
+- Building and kernel performance analysis using Vitis HLS
+
