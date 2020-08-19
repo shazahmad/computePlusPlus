@@ -156,8 +156,9 @@ Comparing results
 Test PASSED: Output matches reference
 ----------------------------------------------------------------------------
 ```
-The input image as input and the output images are displayed below:
+The input, out and reference software output are shown below:
 ![](./images/inputImage50.jpg)
+![](./images/outputImage.jpg)
 
 Lab 3: ( Hardware software integration xclbin and first version of host)
 
