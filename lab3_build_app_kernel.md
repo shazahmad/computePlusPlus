@@ -105,7 +105,7 @@ after setting the target launch the se_emu as follows:
 ```bash
 make run
 ```
-Once the emulation finishes you should get a console output similar to the one below:
+Once the emulation finishes you should get a console output similar to the one below, the output given below is for random input image case:
 ```bash
 ----------------------------------------------------------------------------
 
@@ -132,7 +132,32 @@ Test PASSED: Output matches reference
 ----------------------------------------------------------------------------
 
 ```
+If input image is to be used for processing please set OpenCv paths and INPUT_TYPE as empty string in make_options.mk file and run it again. Following is the expected console output:
+```bash
+----------------------------------------------------------------------------
 
+Xilinx 2D Filter Example Application
+
+FPGA binary       : ./fpgabinary.sw_emu.xclbin
+Input image       : ../test_images/picadilly_1080p.bmp
+Number of runs    : 1
+Filter type       : 3
+Max requests      : 12
+Compare perf.     : 1
+
+Programming FPGA device
+Running FPGA accelerator on 1 images
+  finished Filter2DRequest
+  finished Filter2DRequest
+  finished Filter2DRequest
+Running Software version
+Comparing results
+
+Test PASSED: Output matches reference
+----------------------------------------------------------------------------
+```
+The input image as input and the output images are displayed below:
+![](./images/inputImage.jpg)
 
 Lab 3: ( Hardware software integration xclbin and first version of host)
 
