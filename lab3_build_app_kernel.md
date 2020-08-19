@@ -43,8 +43,34 @@ Both the version of host application contains class named "**Filter2DRequest**",
 ### 2D Filter Dispatcher
 The "**Filter2DDispatcher**" class is the top level class that provides an end-user API to schedule Kernel calls. Every call schedules a kernel enqueue and related data transfers using Filter2DRequest object as explained in previous section. This is a container class that essentially holds a vector of requests objects. The number of **Filter2DRequest** object that are instantiated is defined as "max" parameter for dispatcher class at construction time. The minimum values this parameter can be as small as number of compute unit to allow at-least one kernel enqueue call per compute unit to happen in parallel. But a larger values is desired since it will allow overlap between input and output data transfers happening between host and device. It wont produce any overlap between compute for different images or image color channels larger than total number of compute unit built in the xclbin.
 
+### Building Host Application
+The host application can be built using the makefile that is provided with the tutorial. As mentioned eariler host application has two versions, one takes input images to process other once can generate random datat that will be processed as images. To build host application with randomized data please follow these steps:
+
+```bash
+cd "to the top level tutorial diretory"
+vim make_options.mk
+```
+
+Once the **make_options.mk** is opened make sure **INPUT_TYPE** is chosen as "random". This selection will make sure that the host that uses random image is built.
+```makefile
+############## Host Application Options
+INPUT_TYPE :=random
+```
+
+If it is required to built host that uses input image please set the following two variables that point to **OpenCV 2.4 ** install path in make_options.mk file:
+
+```makefile
+############## OpenCV Installation Paths
+OPENCV_INCLUDE :=/**OpenCV.24 User Install Path**/include
+OPENCV_LIB :=/**OpenCV.24 User Install Path**/lib
+```
+After setting the appropriate paths host application can be built using the makefile command as follows:
+```bash
+make compile_host
+```
+It will build host.exe inside a build folder.
 ## Building 2-D Convolutional Kernel
-As per our performance estimation in previous lab and given performance constraints, the kernel will be built with clock frequency constraint of 300 MHz
+
 
 Lab 3: ( Hardware software integration xclbin and first version of host)
 
