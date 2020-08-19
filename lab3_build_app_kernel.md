@@ -44,14 +44,35 @@ Both the version of host application contains class named "**Filter2DRequest**",
 The "**Filter2DDispatcher**" class is the top level class that provides an end-user API to schedule Kernel calls. Every call schedules a kernel enqueue and related data transfers using Filter2DRequest object as explained in previous section. This is a container class that essentially holds a vector of requests objects. The number of **Filter2DRequest** object that are instantiated is defined as "max" parameter for dispatcher class at construction time. The minimum values this parameter can be as small as number of compute unit to allow at-least one kernel enqueue call per compute unit to happen in parallel. But a larger values is desired since it will allow overlap between input and output data transfers happening between host and device. It wont produce any overlap between compute for different images or image color channels larger than total number of compute unit built in the xclbin.
 
 ### Building Host Application
-The host application can be built using the makefile that is provided with the tutorial. As mentioned eariler host application has two versions, one takes input images to process other once can generate random datat that will be processed as images. To build host application with randomized data please follow these steps:
+The host application can be built using the makefile that is provided with the tutorial. As mentioned earlier host application has two versions, one takes input images to process other one can generate random data that will be processed as images. Makefile is includes a file called "**make_option.mk**" this file provides most of the options that can be used as knobs to generate different host builds and kernel versions for emulation modes. It also provides a way to launch emulation with specific number of test images. The details of options provided by this file are as follows:
+
+- TARGET: selects build target choices are hw,sw_emu,hw_emu
+- PLATFORM: Xilinx platform used for build  
+- ENABLE_STALL_TRACE : instrument kernel to generate stall info choice are yes,no
+- TRACE_DDR: select memory bank for trace storage choices DDR[0-3] etc.
+- FILTER_TYPE: selects between 6 different filter type choice are 0-5
+- PARALLEL_ENQ_REQS: application command line argument for parallel enqueued requests
+- NUM_IMAGES: Number of images to process
+- INPUT_TYPE: select between host versions
+- INPUT_IMAGE: path and name of image file
+- ENABLE_PROF: Enable OpenCl profiling for host application 
+- PROFILE_ALL_IMAGES: while comparing cpu vs. fpga use all images or not
+- NUM_IMAGES_SW_EMU: sets no. of images to use for sw_emu
+- NUM_IMAGES_HW_EMU: sets no. of images to use for hw_emu
+- OPENCV_INCLUDE: OpenCV include folder path
+- OPENCV_LIB: OpenCV lib folder path
+- KERNEL_CONFIG_FILE: kernel config file
+- VPP_TEMP_DIRS: log dir for vpp
+- VPP_LOG_DIRS: log dir for vpp
+
+To build host application with randomized data please follow these steps:
 
 ```bash
 cd "to the top level tutorial diretory"
 vim make_options.mk
 ```
 
-Once the **make_options.mk** is opened make sure **INPUT_TYPE** is chosen as "random". This selection will make sure that the host that uses random image is built.
+Once the **make_options.mk** is opened make sure **INPUT_TYPE** is set as "random". This selection will make sure that the host that uses random image is built.
 ```makefile
 ############## Host Application Options
 INPUT_TYPE :=random
@@ -64,12 +85,53 @@ If it is required to built host that uses input image please set the following t
 OPENCV_INCLUDE :=/**OpenCV.24 User Install Path**/include
 OPENCV_LIB :=/**OpenCV.24 User Install Path**/lib
 ```
+Before application can be built it is required to source the user install specific scripts for setting up the Xilinx Run Time Library and Vitis Library paths.
+```bash
+source /**User XRT Install Path**/setup.sh
+source /**User Vitis Install Path**/settings64.sh
+```
 After setting the appropriate paths host application can be built using the makefile command as follows:
 ```bash
 make compile_host
 ```
 It will build host.exe inside a build folder.
-## Building 2-D Convolutional Kernel
+## Running Software Emulation
+To build and run the kernel in software emulation please proceed as follows:
+Open "make_options.mk" and make sure that target is set to sw_emu:
+```bash
+TARGET ?=sw_emu
+```
+after setting the target launch the se_emu as follows:
+```bash
+make run
+```
+Once the emulation finishes you should get a console output similar to the one below:
+```bash
+----------------------------------------------------------------------------
+
+Xilinx 2D Filter Example Application (Randomized Input Version)
+
+FPGA binary       : ./fpgabinary.sw_emu.xclbin
+Number of runs    : 1
+Image width       : 1920
+Image height      : 1080
+Filter type       : 5
+Max requests      : 12
+Compare perf.     : 1
+
+Programming FPGA device
+Generating a random 1920x1080 input image
+Running FPGA accelerator on 1 images
+  finished Filter2DRequest
+  finished Filter2DRequest
+  finished Filter2DRequest
+Running Software version
+Comparing results
+
+Test PASSED: Output matches reference
+----------------------------------------------------------------------------
+
+```
 
 
 Lab 3: ( Hardware software integration xclbin and first version of host)
