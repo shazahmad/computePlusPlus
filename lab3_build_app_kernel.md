@@ -157,7 +157,7 @@ Test PASSED: Output matches reference
 ----------------------------------------------------------------------------
 ```
 The input image as input and the output images are displayed below:
-![](./images/inputImage.jpg)
+![](./images/inputImage50.jpg)
 
 Lab 3: ( Hardware software integration xclbin and first version of host)
 
