@@ -157,6 +157,7 @@ Test PASSED: Output matches reference
 ----------------------------------------------------------------------------
 ```
 The input, out and reference software output are shown below:
+
 ![](./images/inputImage50.jpg)
 ![](./images/outputImage.jpg)
 ![](./images/refImage.jpg)
