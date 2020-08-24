@@ -101,7 +101,7 @@ which shows an image with Width=1000 and height=30 is simulated. There are defau
  Once the build and simulation is finished launch Vitis HLS GUI to analyze the performance estimates reports and implementation QoR as follows:
  
 ```bash
-vitis_hls -p 
+vitis_hls -p conv_filter_prj
  ```
  After GUI opens first thing to notice is the resource consumption report as shown below:
  
@@ -116,7 +116,7 @@ Since we are simulating and image of 1000x30 so expected latency should be: 30,0
 
    ![](images/vitisHLSIIReport.jpg)
 
-Once we have verified the throughput requirements are met and the resource consumption is acceptable we can move forward and start integrating the whole system. Which will consists of host application to drive the kernel and actually kernel building using one of the Xilinx platform for Alveo Data center cards.
+Once we have verified the throughput requirements are met and the resource consumption is acceptable we can move forward and start integrating the whole system. Which will consists of host application to drive the kernel and building the actual kernel  using one of the Xilinx platform for Alveo Data center cards.
 
 In this lab you learnt about:
 - Optimized implementation of convolution filter

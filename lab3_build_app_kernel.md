@@ -53,8 +53,11 @@ The host application can be built using the makefile that is provided with the t
 - FILTER_TYPE: selects between 6 different filter type choice are 0-5
 - PARALLEL_ENQ_REQS: application command line argument for parallel enqueued requests
 - NUM_IMAGES: Number of images to process
+- IMAGE_WIDTH: image width to use
+- IMAGE_HEIGHT: image height to use 
 - INPUT_TYPE: select between host versions
 - INPUT_IMAGE: path and name of image file
+- USE_PRE_BUILT_XCLBIN: enable use of pre-built fpga binary file
 - ENABLE_PROF: Enable OpenCl profiling for host application 
 - PROFILE_ALL_IMAGES: while comparing cpu vs. fpga use all images or not
 - NUM_IMAGES_SW_EMU: sets no. of images to use for sw_emu
@@ -162,12 +165,79 @@ The input, out and reference software output are shown below:
 ![](./images/outputImage.jpg)
 ![](./images/refImage.jpg)
 
-Lab 3: ( Hardware software integration xclbin and first version of host)
+## Running Hardware Emulation
+The application can be run in hardware emulation mode in a similar way as software emulation the only change needed is in "make_options.mk", please set target as follows:
+``bash
+TARGET=hw_emu
+``
 
-    Create host code for accelerator
-    Run hardware and software emulation
-    Building xclbin
-    Conclude tutorial with Single Cu per RGB channel
-    Discuss timing waveform and perform other analysis deemed fit
-    Show the performance with respect to software
-    Highlight potential gaps/under utilized resources that can be used to increase acceleration
+**NOTE**: *_Hardware Emulation may take long time, makefile default setting will make sure it simulates only single image but it is recommended in case of random input image that image size be set smaller by keeping image height in range of 30-100 pixels. Height and width of the image can be specified using "make_options.mk" file in host options_*  
+
+Launch emulation using the following command:
+```bash
+make run
+```
+It will build hardware kernel in emulation mode and then launch host application. The output printed in console window will be similar to the sw_emu case. But after hw_emu you can analyze different synthesis reports and using Vitis_analyzer view different waveforms. For more details please refer to other [Vitis Tutorials](https://github.com/Xilinx/Vitis-Tutorials)
+
+## Building Kernel Xclbin
+Once the kernel functionality is verified and its resource usage is satisfactory (as single module as synthesized in previous lab) kernel build process can be started. The kernel build process will create an xclbin file which is FPGA executable file which can be read and loaded by host to FPGA card. Since building xclbin take few hours and to avoid such a delay in this lab a builtin xclbin file is provided in folder called "xclbin". During hardware run by default builtin xclbin file will be used. But if it is required to build xclbin please set the following options in make_options.mk file as shown below:
+
+```bash
+USE_PRE_BUILT_XCLBIN := 0
+```
+and launch build and run as follows:
+```bash
+make build
+```
+## System Run
+In this section we will run the host application using FPGA hardware and analyze the performance of overall system using vitis_analyzer and application console log. If you are using builtin xclbin file please make sure **USE_PRE_BUILT_XCLBIN := 1 ** is set to "1", otherwise build the xclbin as described in last step and keep **USE_PRE_BUILT_XCLBIN := 0** Also make sure that in make_options.mk the TARGET is set to "hw". You can also enable the performance comparison with CPU by setting "ENABLE_PROF?=yes" .
+
+ ```bash
+TARGET ?=hw
+.
+.
+.
+ENABLE_PROF?=yes
+.
+.
+.
+USE_PRE_BUILT_XCLBIN :=0 
+```
+
+ To run the application please proceed as follows:
+```bash
+make run
+```
+It should produce a console log similar to the one show below:
+```bsah
+----------------------------------------------------------------------------
+
+Xilinx 2D Filter Example Application (Randomized Input Version)
+
+FPGA binary       : ../xclbin/fpgabinary.hw.xclbin
+Number of runs    : 60
+Image width       : 1920
+Image height      : 1080
+Filter type       : 3
+Max requests      : 12
+Compare perf.     : 1
+
+Programming FPGA device
+Generating a random 1920x1080 input image
+Running FPGA accelerator on 60 images
+Running Software version
+Comparing results
+
+Test PASSED: Output matches reference
+
+FPGA Time         :     0.4240 s
+FPGA Throughput   :   839.4765 MB/s
+CPU  Time         :    28.9083 s
+CPU  Throughput   :    12.3133 MB/s
+FPGA Speedup      :    68.1764 x
+----------------------------------------------------------------------------
+
+```
+
+From the console output it should be clear that acceleration achieved when compared to CPU is 68x. The achieved throughput is 839 MB/s which is close to the estimated throughput of 900 MB/s.
+
