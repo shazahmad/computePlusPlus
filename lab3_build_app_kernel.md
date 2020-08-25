@@ -1,3 +1,15 @@
+﻿﻿<table>
+ <tr>
+   <td align="center"><img src="https://www.xilinx.com/content/dam/xilinx/imgs/press/media-kits/corporate/xilinx-logo.png" width="30%"/><h1>2020.1 Vitis™ Application Acceleration Development Flow Tutorials</h1>
+   <a href="https://github.com/Xilinx/Vitis-Tutorials/branches/all">See 2019.2 Vitis Application Acceleration Development Flow Tutorials</a>
+   </td>
+ </tr>
+ <tr>
+ <td align="center"><h1>Accelerating Video Convolution Filtering Application
+ </td>
+ </tr>
+</table>
+
 # Building the 2-D convolutional Kernel and Host Application
 The lab will focus on building Vitis kernel using Xilinx provided platform for U200 card. A host side application will be designed that will coordinate all the data movements and execution triggers for invoking the kernel. During this lab real performance measurements will be taken and compared to estimated performance and the CPU only performance.
 
@@ -260,3 +272,10 @@ From this table it can be easily seen that the kernel compute time is almost 7 m
 Application timeline can also be used to have a look at performance parameters like compute unit latency per invocation and also the bandwidth utilization. To open application time like select **Application Timeline** from left most pan, it will bring application timeline in right side window. Now zoom in appropriately and go to device side trace. For any compute unit hover your mouse on any transaction in "Row 0" a tooltip will show compute start and end times and also the latency. This should be similar to what we saw in last section. Another important thing to observe is host data transfer trace as shown below:
     ![](images/hostTrace.jpg)
  from this trace it can be easily seen that host read and write bandwidth is not fully utilized there are gaps where there is no read/write transactions happening.
+ 
+
+---------------------------------------
+
+<p align="center"><b>
+<p align="center"><sup>Copyright&copy; 2020 Xilinx</sup></p>
+</b></p>

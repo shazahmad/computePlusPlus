@@ -1,3 +1,15 @@
+﻿﻿<table>
+ <tr>
+   <td align="center"><img src="https://www.xilinx.com/content/dam/xilinx/imgs/press/media-kits/corporate/xilinx-logo.png" width="30%"/><h1>2020.1 Vitis™ Application Acceleration Development Flow Tutorials</h1>
+   <a href="https://github.com/Xilinx/Vitis-Tutorials/branches/all">See 2019.2 Vitis Application Acceleration Development Flow Tutorials</a>
+   </td>
+ </tr>
+ <tr>
+ <td align="center"><h1>Accelerating Video Convolution Filtering Application
+ </td>
+ </tr>
+</table>
+
 # Design and Analysis of Hardware Kernel Module for 2-D Video Convolution Filter
 The focus of this lab will be to illustrate the design of convolutional filter module, analyze its performance and hardware resource utilization. We are following a bottom up approach here by first designing the hardware block and analyzing its performance before integrating the whole system for accelerating the application. We will use Vitis HLS to build and estimate the performance.
 ## 2-D Convolution Filter Implementation
@@ -122,3 +134,10 @@ In this lab you learnt about:
 - Optimized implementation of convolution filter
 - Building and kernel performance analysis using Vitis HLS
 
+
+---------------------------------------
+
+<p align="center"><b>
+Next Lab Module: <a href="./lab3_build_app_kernel.md">Building the 2-D convolutional Kernel and Host Application</a>
+<p align="center"><sup>Copyright&copy; 2020 Xilinx</sup></p>
+</b></p>
