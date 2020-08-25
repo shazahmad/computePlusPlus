@@ -190,7 +190,9 @@ and launch build and run as follows:
 make build
 ```
 ## System Run
-In this section we will run the host application using FPGA hardware and analyze the performance of overall system using vitis_analyzer and application console log. If you are using builtin xclbin file please make sure **USE_PRE_BUILT_XCLBIN := 1 ** is set to "1", otherwise build the xclbin as described in last step and keep **USE_PRE_BUILT_XCLBIN := 0** Also make sure that in make_options.mk the TARGET is set to "hw". You can also enable the performance comparison with CPU by setting "ENABLE_PROF?=yes" .
+In this section we will run the host application using FPGA hardware and analyze the performance of overall system using vitis_analyzer and application console log.
+### Application Run Using FPGA Kernel
+If you are using builtin xclbin file please make sure **USE_PRE_BUILT_XCLBIN := 1 ** is set to "1", otherwise build the xclbin as described in last step and keep **USE_PRE_BUILT_XCLBIN := 0** Also make sure that in make_options.mk the TARGET is set to "hw". You can also enable the performance comparison with CPU by setting "ENABLE_PROF?=yes" .
 
  ```bash
 TARGET ?=hw
@@ -241,3 +243,20 @@ FPGA Speedup      :    68.1764 x
 
 From the console output it should be clear that acceleration achieved when compared to CPU is 68x. The achieved throughput is 839 MB/s which is close to the estimated throughput of 900 MB/s.
 
+### Performance Analysis
+In this section we will analyze the system performance using Vitis Analyzer by looking at different performance parameters.
+#### Kernel Latency and Bandwidth Utilization 
+ While application is run using actual FPGA hardware or in emulation mode a run time trace cane be generated that can be viewed within Vitis Analyzer for details please refer to other [Vitis Tutorials](https://github.com/Xilinx/Vitis-Tutorials) that discuss such details or Vitis user guide. Essentially the information generated during application run can be controlled by different options inside a file that is always named as "xrt.ini". You can have  look at the xrt.ini file that is used for the current experiment it is present at the top level and copied to build folder that is also used for runs. To open the run time profile summary report please follow the steps below:
+```bash
+vitis_analyzer ./build/fpgabinary.xclbin.run_summary
+```
+Once Vitis Analyzer GUI opens, from left side pan select **Profile Summary** and then select **Compute Unit Utilization** from the window that is open on right hand side. It wil bring stats about the measured performance of compute unit. We have built xclbin with 3 compute units so it will show three rows in a tabular format as shown below:
+    ![](images/cuPerf.jpg) 
+From this table it can be easily seen that the kernel compute time is almost 7 ms, almost equal to the estimated kernel latency in previous lab. Another important measurement is the compute unit utilization which is very close 100% essentially meaning that host was able to feed compute units through PCIe continuously. In other words the host PICe bandwidth was sufficient and compute units never saturated it. This fact can also be observed by having look at host bandwidth utilization. To see this select "Host Data Transfers" and a table shown in figure below will be displayed with other details also.
+    ![](images/bwUtil.jpg)
+ From these numbers it is clear that host bandwidth is not fully utilized. Similarly by selecting **Kernel Data Transfers** it can be seen as shown in figure below how much bandwidth is utilized between kernel and device DDR memory. We have used single bank for all the compute unit.
+    ![](images/bwKernel.jpg)
+ #### Application Timeline
+Application timeline can also be used to have a look at performance parameters like compute unit latency per invocation and also the bandwidth utilization. To open application time like select **Application Timeline** from left most pan, it will bring application timeline in right side window. Now zoom in appropriately and go to device side trace. For any compute unit hover your mouse on any transaction in "Row 0" a tooltip will show compute start and end times and also the latency. This should be similar to what we saw in last section. Another important thing to observe is host data transfer trace as shown below:
+    ![](images/hostTrace.jpg)
+ from this trace it can be easily seen that host read and write bandwidth is not fully utilized there are gaps where there is no read/write transactions happening.
