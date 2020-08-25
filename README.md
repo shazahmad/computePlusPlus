@@ -11,7 +11,7 @@
 </table>
 
 # Accelerating Video Convolution Filtering Application
-The tutorial introduces the users with a compute intensive application. The applications is accelerated using Xilinx Alveo Data Center Acceleration Card. The tutorial will go through the design of specific kernel ( customized hardware implementation of application part chosen for acceleration) that runs on FPGA and briefly discusses host side application optimized for performance. The kernel is designed to maximize throughput and host application is optimized to transfer data in an effective manner that moves in-between host and FPGA card. The host application essentially uses a mechanism to hide the data movement latency by overlapping different data moves for multiple compute calls.
+The tutorial introduces the users with a compute intensive application which is accelerated using Xilinx Alveo Data Center FPGA Acceleration Card. It goes through the design of specific kernel ( customized hardware implementation of application part chosen for acceleration) that runs on FPGA and briefly discusses host side application optimized for performance. The kernel is designed to maximize throughput and host application is optimized to transfer data in an effective manner that moves in-between host and FPGA card. The host application essentially uses a mechanism to hide the data movement latency by overlapping different data moves for multiple kernel calls.
 
 ---------------------------------------
 
