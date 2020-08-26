@@ -19,7 +19,7 @@ The first lab is designed to be very simple and straight forward. The objective 
 The lab simply demonstrates the huge performance gain that can be achieved as compared to CPU performance. Whereas next labs in this tutorial will guide through how such performance can be achieved using different optimizations and design techniques for 2D convolutional kernel and the host side application.
 ## Cloning Repo and Vitis setup
 Clone the repository using following command:
-```commandline
+```shell script
 git clone https://github.com/Xilinx/Vitis-Tutorials.git
 ```
 Setup application build and runtime environment using the following commands as per your local installation:
