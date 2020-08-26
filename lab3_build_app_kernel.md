@@ -292,6 +292,10 @@ Application timeline can also be used to have a look at performance parameters l
     
  From the above discussion and given that U200 has multiple DDR banks it is clear that we can improve overall throughput further. By having more compute units that can accelerate single video stream to increase throughput or can be used to process multiple video stream. The next tutorial [Accelerating Compute Intensive Video Filtering Application using Multi-threading/Multiple Processes](../computeIntensive/ReadMe.md) considers this topic in detail.
  
+ In this lab you have learnt:
+- How to build, run and analyze the performance of a video filter
+- The estimated kernel performance and measured correlate very well 
+ 
  ---------------------------------------
 
 <p align="center"><b>
