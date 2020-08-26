@@ -39,7 +39,7 @@ cd REPO_PATH/docs/video-filter/sw_run
 ```
 Results similar to the following will be printed out, note down the CPU throughput.
 
-```
+```commandline
 ----------------------------------------------------------------------------
 Number of runs    : 60
 Image width       : 1920
