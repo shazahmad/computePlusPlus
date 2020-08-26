@@ -66,8 +66,7 @@ Now launch the application to run using FPGA accelerated video convolution filte
     make run
     ```
 The result summary similar to the one given below will be printed.
-
-     ```bsah
+```commandline
     ----------------------------------------------------------------------------
     
     Xilinx 2D Filter Example Application (Randomized Input Version)
@@ -94,7 +93,6 @@ The result summary similar to the one given below will be printed.
     CPU  Throughput   :    12.3133 MB/s
     FPGA Speedup      :    68.1764 x
     ----------------------------------------------------------------------------
-
 ```
 
 ## Results
