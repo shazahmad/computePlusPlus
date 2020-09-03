@@ -59,10 +59,22 @@ The "**Filter2DDispatcher**" class is the top level class that provides an end-u
 ### Building Host Application
 The host application can be built using the makefile that is provided with the tutorial. As mentioned earlier host application has two versions, one takes input images to process other one can generate random data that will be processed as images. Top level Makefile includes a file called "**make_options.mk**" this file provides most of the options that can be used as knobs to generate different host builds and kernel versions for emulation modes. It also provides a way to launch emulation with specific number of test images. The details of options provided by this file are as follows:
 
+#### Kernel Build Options
 - TARGET: selects build target choices are hw,sw_emu,hw_emu
 - PLATFORM: Xilinx platform used for build  
 - ENABLE_STALL_TRACE : instrument kernel to generate stall info choice are yes,no
 - TRACE_DDR: select memory bank for trace storage choices DDR[0-3] for u200 card.
+- KERNEL_CONFIG_FILE: kernel config file
+- VPP_TEMP_DIRS: temporary log dir for Vitis v++ kernel compiler
+- VPP_LOG_DIRS: log dir for for Vitis v++ kernel compiler
+- USE_PRE_BUILT_XCLBIN: enable use of pre-built FPGA binary file
+
+#### Host Build Options
+- ENABLE_PROF: Enable OpenCl profiling for host application 
+- OPENCV_INCLUDE: OpenCV include folder path
+- OPENCV_LIB: OpenCV lib folder path
+
+#### Application Runtime Options
 - FILTER_TYPE: selects between 6 different filter type choice are 0-5
 - PARALLEL_ENQ_REQS: application command line argument for parallel enqueued requests
 - NUM_IMAGES: Number of images to process
@@ -70,16 +82,10 @@ The host application can be built using the makefile that is provided with the t
 - IMAGE_HEIGHT: image height to use 
 - INPUT_TYPE: select between host versions
 - INPUT_IMAGE: path and name of image file
-- USE_PRE_BUILT_XCLBIN: enable use of pre-built FPGA binary file
-- ENABLE_PROF: Enable OpenCl profiling for host application 
 - PROFILE_ALL_IMAGES: while comparing CPU vs. FPGA use all images or not
 - NUM_IMAGES_SW_EMU: sets no. of images to use for sw_emu
 - NUM_IMAGES_HW_EMU: sets no. of images to use for hw_emu
-- OPENCV_INCLUDE: OpenCV include folder path
-- OPENCV_LIB: OpenCV lib folder path
-- KERNEL_CONFIG_FILE: kernel config file
-- VPP_TEMP_DIRS: temporary log dir for Vitis vpp compiler
-- VPP_LOG_DIRS: log dir for for Vitis vpp compiler
+
 
 To build host application with randomized data please follow these steps:
 
