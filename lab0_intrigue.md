@@ -93,7 +93,7 @@ FPGA Speedup      :    68.1764 x
 ```
 
 ## Results
- From the host application console output it is clear that FPGA accelerated kernel can out perform CPU only implementation by a factor of 68x. It is large gain in terms of performance over CPU. Following labs will illustrate how it allows to process more than 3 HD video channels with 1080p resolution in parallel. Next labs will describe how it is possible to achieve such performance gain by building a kernel modeled in software(c++) and host application written in C++.  The host application is written in C++ and it uses OpenCL APIs, which can effectively unleash the compute power of this custom built hardware kernel.
+ From the host application console output it is clear that FPGA accelerated kernel can out perform CPU only implementation by a factor of 68x. It is large gain in terms of performance over CPU. Following labs will illustrate how it allows to process more than 3 HD video channels with 1080p resolution in parallel. It will be described how it is possible to achieve such performance gain by building a kernel modeled in software(c++) and host application which is also written in C++.  The host application uses OpenCL APIs and Xilinx Runtime(XRT) Underneath of it. Host application demonstrates how to effectively unleash the compute power of this custom built hardware kernel.
 
 
 ---------------------------------------
