@@ -11,12 +11,12 @@
 </table>
 
 # Experience the Acceleration
-The first lab is designed to be very simple and straight forward. The objective of the labs is let the user experience what acceleration performance can be achieved by porting the video filter to an FPGA card. The card being used is from Xilinx's Alveo series which are designed for accelerating data center applications. But in general this tutorial can be adapted to other FPGA cards with some simple changes.
+The first lab is designed to be simple and straight forward. The objective of this labs is to let the user experience what acceleration performance can be achieved by porting the video filter to an FPGA card. The card being used is from Xilinx's Alveo series which are designed for accelerating data center applications. But in general this tutorial can be adapted to other FPGA cards with some simple changes.
  The steps to be carried out for this lab include:
 - Setting up Vitis acceleration environment
 - Running hardware optimized accelerator and comparing its performance with baseline
 
-The lab simply demonstrates the huge performance gain that can be achieved as compared to CPU performance. Whereas next labs in this tutorial will guide through how such performance can be achieved using different optimizations and design techniques for 2D convolutional kernel and the host side application.
+The lab simply demonstrates the huge performance gain that can be achieved as compared to CPU performance. Whereas next labs in this tutorial will illustrate and guide how such performance can be achieved using different optimizations and design techniques for 2D convolutional kernel and the host side application.
 ## Cloning Repo and Vitis setup
 Clone the repository using following command:
 ```bash
@@ -31,13 +31,13 @@ source XRT_INSTALL_PATH/setup.sh
 
 
 ## Baseline Application Performance
-The software application is design to process HD video resolution images(1920x1080). It performs convolution on a set of images and prints the summary of performance results. It is used for measuring baseline software performance. Run the application to measure performance as follows:
+The software application is design to process High Definition(HD) video frames/images with 1920x1080 resolution. It performs convolution on a set of images and prints the summary of performance results. It is used for measuring baseline software performance. Run the application to measure performance as follows:
 
 ```bash
-cd REPO_PATH/docs/video-filter/sw_run
+cd REPO_PATH/sw_run
 ./run.sh 
 ```
-Results similar to the following will be printed out, note down the CPU throughput.
+Results similar to the ones shown below will be printed. Note down the CPU throughput.
 
 ```bash
 ----------------------------------------------------------------------------
@@ -55,14 +55,11 @@ CPU  Throughput   :    12.7112 MB/s
 ```
 
 ## Running FPGA Accelerated Application
-### Building the Host Application
-Run the following script to build host application. The binary file for FPGA(xclbin) takes considerable time for building so it is provided prebuilt, in next lab we will also provide commands to build.
-
 ### Launching the Host Application
-Now launch the application to run using FPGA accelerated video convolution filter. 
+Now launch the application which uses FPGA accelerated video convolution filter.
 
 ```bash
-cd REPO_PATH/docs/video-filter/
+cd REPO_PATH/
 make run
 ```
 The result summary similar to the one given below will be printed.
@@ -96,7 +93,7 @@ FPGA Speedup      :    68.1764 x
 ```
 
 ## Results
- From the console output coming out of the host application it is clear that FPGA accelerated kernel can out perform CPU only implementation by 68x. It is big gain in terms of performance over CPU and in next labs we will see it allows us to process more than 3 HD video channles with 1080p resolution. Given this big gain in perfoamcne next labs will be dedicated in describing how it was made possible by building a kernel modeled in software(c++) as well as how to write a host application, which can effectively unleash the compute power of this custom built hardware kernel.
+ From the host application console output it is clear that FPGA accelerated kernel can out perform CPU only implementation by a factor of 68x. It is large gain in terms of performance over CPU. Following labs will illustrate how it allows to process more than 3 HD video channels with 1080p resolution in parallel. Next labs will describe how it is possible to achieve such performance gain by building a kernel modeled in software(c++) and host application written in C++.  The host application is written in C++ and it uses OpenCL APIs, which can effectively unleash the compute power of this custom built hardware kernel.
 
 
 ---------------------------------------
