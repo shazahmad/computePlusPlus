@@ -67,6 +67,7 @@ Two functions at the input and output are modules that read and write data from 
       
 
 ###Data Mover
+
 One of the key advantages that come with the design of custom hardware accelerators, for which FPGAs are well suited for many reasons, is the choice and architecture of custom data movers. These customized data movers facilitate efficient access to device global memory and also optimize the bandwidth utilization by reusing data.  Specialized data movers at the interface with main memory can be built at the input and output of the data processing engine or processing elements. The convolutional filter is a very good example of this. Looking from a pure software implementation point of view at the source code it seems that to produce a single sample at the output side requires 450 memory accesses at the input side and 1 write access to the output.
 ```bash
 Memory Accesses to Read filter Co-efficients = 15x15 = 225
