@@ -11,13 +11,17 @@
 </table>
 
 # Design and Analysis of Hardware Kernel Module for 2-D Video Convolution Filter
-The focus of this lab will be to illustrate the design of a convolutional filter module, analyze its performance and hardware resource utilization. A bottom-up approach is followed here by first designing the hardware block and analyzing its performance before integrating the host and kernel module for accelerating the complete application. Vitis HLS will be used to build and estimate the performance.
+This lab is designed to:
+demonstrate the design of a convolutional filter module
+ do performance analysis
+ analyze hardware resource utilization. 
+A bottom-up approach is followed here by first designing the hardware block and analyzing its performance before integration with the host application. Vitis HLS will be used to build and estimate the performance.
 
 ## 2-D Convolution Filter Implementation
-This section discusses the design of a convolution filter in detail. It goes through the top-level structure, optimizations, and implementation details.
+This section discusses the design of a convolution filter in detail. It goes through its top-level structure, optimizations performed, and implementation details.
 
 ### Top Level Structure of Kernel
-The top-level of convolution filter is modeled using a dataflow process consisting of four different functions as given below, for full implementation details please refer to source file  **"src/filter2d_hw.cpp"**.
+The top-level of the convolution filter is modeled using a dataflow process. The dataflow consists of four different functions as given below. For full implementation details please refer to source file  **"src/filter2d_hw.cpp"**.
 
 ```cpp
 void Filter2DKernel(
@@ -61,13 +65,12 @@ Dataflow chain consists of four different functions as follows:
 - **Filter2D**:  core kennel filtering algorithm
 - **WriteToMem**:  writes output data to main memory
 
-Two functions at the input and output are modules that read and write data from the device's global memory connecting it with the accelerator. The data read from the main memory is passed to Window2D function which creates a local cache and on every cycle provides a 15x15 pixel sample to filter function/block. The filter function can consume it in a single cycle to perform 225(15x15) MACs per cycle. Please open the source file and have a look at the implementation details of these individual functions. In the next section, we will elaborate on the implementation details of Window2D and Filter2D functions. The following figure shows how data flows between different functions(dataflow modules).
+Two functions at the input and output read and write data from the device's global memory. The "ReadFromMem" function reads data and streams it for filtering. The "WriteToMem" function at the end of the chain writes processed pixel data to the device memory. The input data(pixels) read from the main memory is passed to Window2D function which creates a local cache and on every cycle provides a 15x15 pixel sample to filter function/block. The filter function can consume it in a single cycle to perform 225(15x15) MACs per cycle. Please open the source file and have a look at the implementation details of these individual functions. In the next section, we will elaborate on the implementation details of Window2D and Filter2D functions. The following figure shows how data flows between different functions(dataflow modules).
 
    ![](images/filterBlkDia.jpg)
       
 
-###Data Mover
-
+### Data Mover
 One of the key advantages that come with the design of custom hardware accelerators, for which FPGAs are well suited for many reasons, is the choice and architecture of custom data movers. These customized data movers facilitate efficient access to device global memory and also optimize the bandwidth utilization by reusing data.  Specialized data movers at the interface with main memory can be built at the input and output of the data processing engine or processing elements. The convolutional filter is a very good example of this. Looking from a pure software implementation point of view at the source code it seems that to produce a single sample at the output side requires 450 memory accesses at the input side and 1 write access to the output.
 ```bash
 Memory Accesses to Read filter Co-efficients = 15x15 = 225
@@ -76,23 +79,23 @@ Memory Accesses to Write to Output           = 1
 Total Memory Accesses                       = 451 
 ```  
 
-For pure software implementation even though many of these accesses can become fast because of caching but still a large number of memory accesses will be a performance bottleneck. But while designing on FPGA efficient data movement and access schemes can be built easily. One of the key and major advantages is the availability of huge on-chip memory bandwidth( distributed and block memory) and the choice of a custom configuration of this bandwidth. This choice of custom configuration essentially allows us to create an on-demand cache architecture particularly suited for the given algorithm.  In the next section, we will elaborate on the design of the "Window2D" block which is essentially an input side data mover or local on-chip cache facing kernel processing engine. 
+For pure software implementation even though many of these accesses can become fast because of caching but still a large number of memory accesses will be a performance bottleneck. But while designing on FPGA efficient data movement and access schemes can be built easily. One of the key and major advantages is the availability of huge on-chip memory bandwidth( distributed and block memory) and the choice of a custom configuration of this bandwidth. This choice of custom configuration essentially allows us to create an on-demand cache architecture particularly tailored for the given algorithm. The next section elaborates on the design of the "Window2D" block.
 
 #### Window2D: Line and Window Buffers
-The Windows2D block is essentially built from two basic blocks, one is a line buffer that can buffer multiple lines of a full image, and specifically, here it is designed to buffer **_FILTER_V_SIZE - 1_** image lines. Where FILTER_V_SIZE is the height of the convolution filter. The total number of pixels held by line buffer is **(FILTER_V_SIZE-1) *  MAX_IMAGE_WIDTH**.  The other block is "Window" which holds **FILTER_V_SIZE * FILTER_H_SIZE** pixels. The 2-D convolution filtering operation consists of centering the filtering mask(filter coefficients) on the index of output pixel and calculating the sum-of-product(SOP) as described in the previous lab also. The following figure shows how this centering and SOP are carried. 
+The Windows2D block is essentially built from two basic blocks, one of them is a called "line buffer" and the other one is a called "Window". The line buffer is used to buffer multiple lines of a full image, and specifically, here it is designed to buffer **_FILTER_V_SIZE - 1_** image lines. Where FILTER_V_SIZE is the height of the convolution filter. The total number of pixels held by line buffer is **(FILTER_V_SIZE-1) *  MAX_IMAGE_WIDTH**.  The "Window" block holds **FILTER_V_SIZE * FILTER_H_SIZE** pixels. The 2-D convolution filtering operation consists of centering the filtering mask(filter coefficients) on the index of output pixel and calculating the sum-of-product(SOP) as described in the previous lab also. The following figure shows how this centering and SOP operations are carried. 
 
    ![](images/convolution.jpg)   
       
- The figure above shows SOP carried out for a full image being processed but if we look carefully when output pixels are produced line by line, it is not required to have all the image pixels in memory but only the line where the filtering mask overlaps are required which is essentially (FILTER_V_SIZE) which even can be reduced to FILTER_V_SIZE-1. Essentially that is the amount of the data that needs to be on-chip or housed by a data mover at any given time.
+ The figure above shows SOP carried out for a full image being processed. If we look carefully when output pixels are produced line by line, it is not required to have all the image pixels in memory. Only the line where the filtering mask overlaps are required which is essentially (FILTER_V_SIZE) which even can be reduced to FILTER_V_SIZE-1. Essentially that is the amount of the data that needs to be on-chip or housed by a data mover at any given time.
  
    ![](images/Window2D.jpg) 
    
-  The figure above illustrates the operation and requirements for a line and widow buffer. The image size is assumed 8x8 and the filter size is 3x3. Assume we are generating output pixel number 10, for this what we need is a 3x3 block of input pixels centered around it as shown by step "A". Step B in the figure highlights what is required for producing pixel number 11 again a 3x3 block but it has a significant overlap with previous input block. Essentially a column moves out from the left and a column moves in from the right. One important thing to identify between steps A, B, and C is that from the input side it only needs one new pixel to produce one output (ignoring the initial latency of filling line buffer with multiple pixels which is one time only). Give all these observations Window2D is implemented using a line buffer which holds FILTER_V_SIZE-1 lines ( In general it requires FILTER_V_SIZE lines but a line is reduced by using line buffer in a circular fashion and by exploiting the fact that pixels at the start of the first line buffer can be used to write new incoming pixels since they are no longer needed). The window buffer is implemented as FILTER_V_SIZE * FILTER_H_SIZE storage fully partitioned giving parallel access to all elements inside the window. The data moves as a column vector of size FILTER_V_SIZE from line buffer to window buffer and then this whole widow is passed through a stream to Filter2D function for processing. The overall scheme (data mover) is built to maximize the data reuse providing maximum parallel data to the processing element. To have a deeper understanding of the modeling style and minute details of data mover please have a look at the Window2D function implementation details in the provided source code file named "filter2d_hw.cpp".
+  The figure above illustrates the operation and requirements for a line and Window buffer. The image size is assumed 8x8 and the filter size is 3x3. For understanding purposes, let us assume we are generating output pixel number 10. For this what we need is a 3x3 block of input pixels centered around it as shown by step "A". Step B in the figure highlights what is required for producing pixel number 11 again a 3x3 block but it has a significant overlap with previous input block. Essentially a column moves out from the left and a column moves in from the right. One important thing to identify between steps A, B, and C is that from the input side it only needs one new pixel to produce one output (ignoring the initial latency of filling line buffer with multiple pixels which is one time only). Give all these observations Window2D is implemented using a line buffer. The line buffer holds FILTER_V_SIZE-1 lines. In general, it requires FILTER_V_SIZE lines but a line is reduced by using the line buffer in a circular fashion and by exploiting the fact that pixels at the start of the first line buffer can be used to write new incoming pixels since they are no longer needed. The window buffer is implemented as FILTER_V_SIZE * FILTER_H_SIZE storage fully partitioned giving parallel access to all elements inside the window. The data moves as a column vector of size FILTER_V_SIZE from line buffer to window buffer and then this whole widow is passed through a stream to Filter2D function for processing. The overall scheme (data mover) is built to maximize the data reuse providing maximum parallel data to the processing element. To have a deeper understanding of the modeling style and minute details of data mover please have a look at the Window2D function implementation. The function can be found in the provided source code file named "filter2d_hw.cpp".
  
  ## Building and Simulating the Kernel using Vitis HLS
- In this section, we will build and simulate the 2D convolution filter using Vitis HLS and also look at the performance estimates and measured results after co-simulation for comparison with target performance settings. 
+ In this section, we will build and simulate the 2D convolution filter using Vitis HLS. We will also look at the performance estimates and measured results after co-simulation for comparison with target performance settings. 
  ### Building Kernel Module
- Here you will the build kernel module as an isolated module with AXI interfaces to memory which is also used for simulation. To do this please follow the steps listed below:
+ Here you will build the kernel module as an isolated module with AXI interfaces to memory which is also used for simulation. To do this please follow the steps listed below:
  
  ```bash
     cd  hls_build
@@ -113,7 +116,7 @@ An output similar to the following will be printed:
     ----------------------------------------------------------------------------
     INFO: [COSIM 212-1000] *** C/RTL co-simulation finished: PASS ***
 ```
-which shows an image with Width=1000 and height=30 is simulated. There are default parameters for image dimensions and kept as small values to make co-simulation run in a short time. The synthesis is done for a max. image size of 1920x1080.
+which shows an image with Width=1000 and height=30 is simulated. There are default parameters for image dimensions and kept as small values to make co-simulation run in a short time. The synthesis is done for a maximum image size of 1920x1080.
  Once the build and simulation are finished, launch Vitis HLS GUI to analyze the performance estimate reports and implementation QoR as follows:
  
 ```bash
@@ -123,7 +126,7 @@ vitis_hls -p conv_filter_prj
  
   ![](images/vitisHlsResourceReport2.jpg) 
   
- It shows the use of 139 DSP essentially for SOP by top-level module and you should also notice the use of 14 BRAMs by Window2D data mover block. One important thing to notice is the static performance estimate for the kernel which is 7.3 ms, very close to the estimated target latency for the kernel which was 6.9 ms as calculated in the previous lab. Another thing that we can use to get an accurate measurement of latency for kernel is to have a look at the co-simulation report.  You can go to the reports menu in Vitis HLS and open co-simulation report it will show something as follows:
+ It shows the use of 139 DSP essentially for SOP by top-level module and the use of 14 BRAMs by Window2D data mover block. One important thing to notice is the static performance estimate for the kernel which is 7.3 ms, very close to the estimated target latency for the kernel which was 6.9 ms as calculated in the previous lab. Another thing that we can use to get an accurate measurement of latency for kernel is to have a look at the co-simulation report.  You can go to the reports menu in Vitis HLS and open co-simulation report it will show something as follows:
 
    ![](images/vitisHLSCosimReport.jpg) 
 
@@ -132,7 +135,7 @@ Since we are simulating an image of 1000x30 so expected latency should be: 30,00
 
    ![](images/vitisHLSIIReport.jpg)
 
-Once we have verified that the throughput requirements are met and the resource consumption is acceptable we can move forward and start integrating the full application. Which will consists of a host application to drive the kernel and building the actual kernel using one of the Xilinx platforms for Alveo Data center cards here for this lab U200 card is used.
+Once we have verified that the throughput requirements are met and the resource consumption is acceptable we can move forward and start integrating the full application. Which will consists of creating a host application to drive the kernel and building the actual kernel using one of the Xilinx platforms for Alveo Data center cards. Here for this lab U200 card is used.
 
 In this lab you learned about:
 - Optimized implementation of convolution filter
