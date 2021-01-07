@@ -11,14 +11,14 @@
 </table>
 
 # Experience the Acceleration
-The first lab is designed to be simple and straight forward. The objective of this labs is to let the user experience what acceleration performance can be achieved by porting the video filter to an FPGA card. The card being used is from Xilinx's Alveo series which are designed for accelerating data center applications. But in general this tutorial can be adapted to other FPGA cards with some simple changes.
+The first lab is designed to be simple and straightforward. The objective of this lab is to let the user experience what acceleration performance can be achieved by porting the video filter to an FPGA card. The card being used is from Xilinx's Alveo series. The Alveo series cards are designed for accelerating data center applications. But in general, this tutorial can be adapted to other FPGA cards with some simple changes.
  The steps to be carried out for this lab include:
 - Setting up Vitis acceleration environment
 - Running hardware optimized accelerator and comparing its performance with baseline
 
-The lab simply demonstrates the huge performance gain that can be achieved as compared to CPU performance. Whereas next labs in this tutorial will illustrate and guide how such performance can be achieved using different optimizations and design techniques for 2D convolutional kernel and the host side application.
+The lab simply demonstrates the huge performance gain that can be achieved as compared to CPU performance. Whereas the next labs in this tutorial will illustrate and guide how such performance can be achieved using different optimizations and design techniques for 2D convolutional kernel and the host side application.
 ## Cloning Repo and Vitis setup
-Clone the repository using following command:
+Clone the repository using the following command:
 ```bash
 git clone https://github.com/Xilinx/Vitis-Tutorials.git
 ```
@@ -93,7 +93,7 @@ FPGA Speedup      :    68.1764 x
 ```
 
 ## Results
- From the host application console output it is clear that FPGA accelerated kernel can out perform CPU only implementation by a factor of 68x. It is large gain in terms of performance over CPU. Following labs will illustrate how it allows to process more than 3 HD video channels with 1080p resolution in parallel. It will be described how it is possible to achieve such performance gain by building a kernel modeled in software(c++) and host application which is also written in C++.  The host application uses OpenCL APIs and Xilinx Runtime(XRT) Underneath of it. Host application demonstrates how to effectively unleash the compute power of this custom built hardware kernel.
+ From the host application console output, it is clear that the FPGA accelerated kernel can outperform CPU-only implementation by a factor of 68x. It is a large gain in terms of performance over CPU. The following labs will illustrate how it allows processing more than 3 HD video channels with 1080p resolution in parallel. It will be described how it is possible to achieve such performance gain by building a kernel modeled in software(c++) and host application which is also written in C++.  The host application uses OpenCL APIs and Xilinx Runtime(XRT) Underneath it. Host application demonstrates how to effectively unleash the computing power of this custom-built hardware kernel.
 
 
 ---------------------------------------
