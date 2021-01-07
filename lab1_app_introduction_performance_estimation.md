@@ -10,19 +10,19 @@
  </tr>
 </table>
 
-# Video Convolution Filter : Introduction and Performance Estimation
-This lab will explore a 2D video convolution filter and measure its performance on host machine. These measurement will establish a performance baseline. Based on the required performance constraints the amount of acceleration that should be provided by hardware implementation is calculated. The performance of FPGA accelerator will be estimated that is implemented in next labs. In nutshell during this lab you will:
+# Video Convolution Filter: Introduction and Performance Estimation
+This lab will explore a 2D video convolution filter and measure its performance on the host machine. These measurements will establish a performance baseline. Based on the required performance constraints the amount of acceleration that should be provided by hardware implementation is calculated. The performance of the FPGA accelerator will be estimated that is implemented in the next labs. In nutshell during this lab you will:
 - Learn about video convolution filters
-- Measure the performance of software implementated convolution filter
+- Measure the performance of software implemented convolution filter
 - Calculate required acceleration vs. software implementation for given performance constraints
 - Estimate the performance of hardware accelerator in advance before implementation
 
 ## Video Filtering Applications and 2-D Convolution Filters
-Video applications use different type of filters extensively for multiple reasons such as to filter noise, manipulate motion blur, color and contrast enhancements, edge detection, creative effects etc. At its core convolutional video filter carries out some form of data average around a pixel that effects the amount and type of correlation any pixel has to its surrounding area. Such filtering is carried out for all the pixels in a video frame. The convolution filters are defined by a matrix of coefficients. The convolution operation is essentially a sum of products carried on a pixel set(a frame/image sub-matrix centered around a give pixel) and a coefficients matrix. The figure below illustrates how convolution is calculated for a pixel, it is highlighted in yellow. Here the filter has a coefficient matrix that is 3x3 in size. The figure also displays how the whole output images is generated during filtering process. The index of output pixel being generated is the index of input pixel highlighted in yellow that is being filtered. In algorithmic terms the process of filtering consists of:
+Video applications use different types of filters extensively for multiple reasons such as to filter noise, manipulate motion blur, color and contrast enhancements, edge detection, creative effects, etc. At its core, a convolutional video filter carries out some form of data average around a pixel which redefines the amount and type of correlation any pixel has to its surrounding area. Such filtering is carried out for all the pixels in a video frame. The convolution filters are defined by a matrix of coefficients. The convolution operation is essentially a sum of products carried on a pixel set(a frame/image sub-matrix centered around a given pixel) and a coefficients matrix. The figure below illustrates how convolution is calculated for a pixel, it is highlighted in yellow. Here the filter has a coefficient matrix that is 3x3 in size. The figure also displays how the whole output image is generated during the filtering process. The index of the output pixel being generated is the index of the input pixel highlighted in yellow that is being filtered. In algorithmic terms the process of filtering consists of:
 - Selecting an input pixel as highlighted in yellow in the figure below
-- Extracting a sub-matrix whose size is same as filter coefficients
-- Calculating element wise sum of product of extracted sub-matrix and coefficients matrix
-- Placing the sum of product as output pixel in output image/frame on the same index as the input pixel
+- Extracting a sub-matrix whose size is the same as filter coefficients
+- Calculating element-wise sum-of-product of extracted sub-matrix and coefficients matrix
+- Placing the sum-of-product as output pixel in output image/frame on the same index as the input pixel
       ![](images/convolution.jpg)
 
 ## Performance Requirements for 1080p HD Video
@@ -44,7 +44,7 @@ The required throughput to meet 60 FPS performance turns out to be 373 MB/s ( si
 ## Software Implementation and Performance Estimation
 This section will discuss the baseline software implementation and performance measurements which will be used to gauge the acceleration requirements given the performance constraints.
 ### Software Implementation
-The convolutional filter is implemented in software using a typical multi-level nested loop structure. Outer two loops define the pixel to be processed(iterating over each pixel). The inner two loops perform the sum of product(SOP), actual convolution filtering between the coefficient matrix and the selected sub-matrix from the image centered around the pixel being processed. Boundary conditions where it is not possible to center sub-matrix around given pixel require special processing in our case we have assumed all pixel beyond the boundary of the image have zero values.
+The convolutional filter is implemented in software using a typical multi-level nested loop structure. Outer two loops define the pixel to be processed(iterating over each pixel). The inner two loops perform the sum-of-product(SOP), actual convolution filtering between the coefficient matrix and the selected sub-matrix from the image centered around the pixel being processed. Boundary conditions where it is not possible to center sub-matrix around given pixel require special processing in our case we have assumed all pixels beyond the boundary of the image have zero values.
 
 ```cpp
 void Filter2D(
@@ -102,7 +102,7 @@ The following snapshot shows how top-level calls convolution filter function for
   }
 ```
 ### Running the Software Application
-To run the software application go to directory called "sw_run" and launch the application as follows:
+To run the software application go to the directory called "sw_run" and launch the application as follows:
 
 ```bash
 cd sw_run
@@ -123,7 +123,7 @@ CPU  Time         :    24.4447 s
 CPU  Throughput   :    14.5617 MB/s
 ----------------------------------------------------------------------------
 ```
-The application run measures performance using high precision timers and reports it as throughput. The machine  used for experiments produced a throughput of 14.51 MB/s. The  machine details are listed below:
+The application run measures performance using high precision timers and reports it as throughput. The machine used for experiments produced a throughput of 14.51 MB/s. The  machine details are listed below:
 
 ```bash
     CPU Model : Intel(R) Xeon(R) CPU E5-1650 v2 @ 3.50GHz
@@ -137,7 +137,7 @@ The measured performance is **_"2.34 FPS"_** only whereas the required throughpu
 So to meet the required performance the implementation needs to be accelerated by almost 26x. 
 
 ## Hardware Implementation
-To understand what kind of hardware implementation is needed given the performance constraints let us analyze the convolutional kernel in some detail. The core compute is done in a 4-level nested loop but we can break the compute per output pixel produced. In terms of the output pixels produced it is clear from the filter source code that a single output pixel is produced when the inner two loops finish execution once. These two loops are essentially doing the sum of product on a coefficient matrix and image sub-matrix. Here these matrix sizes are defined by coefficient matrix and in this case, it is chosen to be 15x15. So inner two loops are essentially performing a dot product of size 225(15x15).
+To understand what kind of hardware implementation is needed given the performance constraints let us analyze the convolutional kernel in some detail. The core compute is done in a 4-level nested loop but we can break the compute per output pixel produced. In terms of the output-pixels produced it is clear from the filter source code that a single output pixel is produced when the inner two loops finish execution once. These two loops are essentially doing the sum-of-product on a coefficient matrix and image sub-matrix. Here these matrix sizes are defined by coefficient matrix and in this case, it is chosen to be 15x15. So inner two loops are essentially performing a dot product of size 225(15x15).
 ### Baseline Hardware Implementation Performance
 The simplest and straightforward implementation in hardware can be achieved by passing this kernel source code as it is through the Vitis HLS tool. It will pipeline the innermost loop with II=1 hence doing only one multiply-accumulate(MAC) per cycle. The performance can be estimated based on the MACs as follows:
 ```bash
@@ -157,11 +157,11 @@ Acceleration Factor to Meet 60FPS Performance = 373/1.33 = 280x
 Acceleration Factor to Meet SW Performance    = 14.5/1.33 = 10.9x
 ```
 ### Performance Estimation for Optimized Hardware Implementation
-From the above calculations, it is clear that we need to improve the performance of baseline hardware implementation by 280x to meet the required performance. One of the paths we can take is to start unrolling the inner loops and pipeline. For example by unrolling the innermost loop which iterates 15 times we can improve the performance by 15x. With that, the performance will be better than software-only implementation but still, we cannot meet the required video performance. Another approach that we can follow is to unroll the inner two loops and hence gain in performance by 15*15=225 which means a throughput  of 1-output pixel per cycle. The performance and memory bandwidth requirements will be as follows:
+From the above calculations, it is clear that we need to improve the performance of baseline hardware implementation by 280x to meet the required performance. One of the paths we can take is to start unrolling the inner loops and pipeline. For example by unrolling the innermost loop which iterates 15 times we can improve the performance by 15x. With that, the performance will be better than software-only implementation but still, we cannot meet the required video performance. Another approach that we can follow is to unroll the inner two loops and hence gain in performance by 15*15=225 which means a throughput of 1-output pixel per cycle. The performance and memory bandwidth requirements will be as follows:
 ```bash
     Throughput  = Fmax/(Pixels produced per cycle) = 300/1 = 300 MB/s
     Output Memory Bandwidth = Fmax * Pixels produced per cycle =  300 MB/s
-    Input Memory Bandwidth = Fmax * Input pixels read per outptu pixel = 300 * 225 = 67.5 GB/s
+    Input Memory Bandwidth = Fmax * Input pixels read per output pixel = 300 * 225 = 67.5 GB/s
 ```
 
 The required output memory bandwidth scales linearly with throughput but input memory bandwidth has gone up enormously and might not be sustainable. But a closer look at the convolution filter will reveal that it is not required to read all 225(15x15) pixels from the input memory for processing. A clever caching scheme can be built to avoid such extensive use of input memory bandwidth. The convolutional filter belongs to a class of kernels known as stencil kernels which can be optimized to increase input data reuse extensively. Which can result in substantially reduced memory bandwidth requirements. Actually, with a caching scheme, we can bring the input bandwidth required to be the same as output which is around 300 MB/s. With the optimized data reuse scheme when both inner loops are unrolled it will require that only 1-input pixel is read for producing one output pixel on average and hence input memory bandwidth of 300 MB/s.
@@ -169,7 +169,7 @@ Given that we can bring down the input bandwidth, the achieved performance will 
 ```bash
  Throughput(estimated)  = Performance of Single Compute Unit * No. Compute Units = 300 x 3 = 900 MB/s
  Acceleration Against Software Implementation = 900/14.5 = 62x
- Kernel Latecny ( per image on any color channel ) = (1920*1080) / 300 = 6.9 ms
+ Kernel Latency ( per image on any color channel ) = (1920*1080) / 300 = 6.9 ms
  Video Processing Rate = (1/Kernel Latency) = 144  FPS   
 ```
 
