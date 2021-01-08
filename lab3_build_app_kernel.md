@@ -300,6 +300,7 @@ Application timeline can also be used to have a look at performance parameters l
  
  In this lab you have learned: 
 - How to build, run and analyze the performance of a video filter
+- How to write optimized host-side application for multi CU designs 
 - How to estimate kernel performance and compare with measured performance
 
  ---------------------------------------
