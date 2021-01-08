@@ -11,7 +11,7 @@
 </table>
 
 # Building the 2-D convolutional Kernel and Host Application
-The lab will focus on building a hardware kernel using Vitis for Xilinx provided platform for U200 card. A host-side application will be designed that will coordinate all the data movements and execution triggers for invoking the kernel. During this lab, real performance measurements will be taken and compared to estimated performance and the CPU-only performance.
+The lab will focus on building a hardware kernel using Vitis for Xilinx provided platform for U200 card. A host-side application will be implemented that will coordinate all the data movements and execution triggers for invoking the kernel. During this lab, real performance measurements will be taken and compared to estimated performance and the CPU-only performance.
 
 ## Host Application
 This section briefly discusses how host application is written to orchestrate the execution of a convolutional kernel. As it was estimated in the previous lab that to meet the performance constraints of 1080p HD Video multiple compute units will be needed. The host application is designed to be agnostic to the number of compute units. More specifically if the compute units are symmetric ( instance of the same kernel and memory connectivity to device DDR banks is identical) the host application can deal with any number of compute units. Other tutorials about [host programming and Vitis](https://github.com/Xilinx/Vitis-Tutorials) are also available.
@@ -22,10 +22,10 @@ Please go to the top-level folder for the convolution tutorial and change the di
 cd src
 ls
 ```
-There are two files namely "**host.cpp**" and "**host_randomized.cpp**". They can be used to build two different versions of the host application. The way they interact with the kernel compute unit is exactly the same except that one uses **pgm** image file as input that is repeated multiple times to emulate an image sequence(video) and the other one uses randomly generated image sequence data. The host with random input image generation has no dependencies whereas the host code in "**host.cpp**" uses OpenCV libraries, specifically it uses **OpenCV 2.4** libraries to load, unload and convert between raw image formats.
+There are two files namely "**host.cpp**" and "**host_randomized.cpp**". They can be used to build two different versions of the host application. The way they interact with the kernel compute unit is exactly the same except that one uses **pgm** image file as input. This file is repeated multiple times to emulate an image sequence(video). The randomized host uses a randomly generated image sequence. The host with random input image generation has no dependencies whereas the host code in "**host.cpp**" uses OpenCV libraries, specifically it uses **OpenCV 2.4** libraries to load, unload and convert between raw image formats.
 
 ### Host Application Details
-Host application starts by parsing command line arguments following are the command line options provided by host that takes input image and uses OpenCV(in source file "src/host.cpp"):
+The host application starts by parsing command line arguments. Following are the command-line options provided by the host that takes input image and uses OpenCV(in source file "src/host.cpp"):
 
 ```cpp
   CmdLineParser parser;
@@ -47,40 +47,40 @@ The other host file(in source file "host_randomized.cpp") that uses randomized i
   parser.addSwitch("--maxreqs", "-r", "Maximum number of outstanding requests", "3");
   parser.addSwitch("--compare", "-c", "Compare FPGA and SW performance", "false", true);
 ```
-different options can be used to launch the application and performance measurement. In this lab, we will set most of these command-line inputs to the application using a makefile. In the top-level directory a file namely **make_options.mk** is provided that allows setting most of these options. This section elaborates more on application structure and host application and compute unit interactions and how it is modeled.
-The next thing the host application does is to create OpenCL context, read and load xclbin, and create a command queue with out-of-order execution and profiling enabled. After OpenCL setup memory allocation is done and the input image is read(or randomly generated). Once the setup is complete "Filter2DDispatcher" object is created and used to dispatch filtering requests on several images. Timers are used to take execution time measurement for both software and hardware execution. Finally, the host application prints the summary of performance results. Most of the heavy lifting is done by "**Filter2DDispatcher**" and **Filter2DRequest** classes which manage and coordinate the execution of filtering operations on multiple compute units. Both of the host versions are based on these classes. The next section elaborates on how this class abstracts these details.
+Different options can be used to launch the application and for performance measurements. In this lab, we will set most of these command-line inputs to the application using a makefile. In the top-level directory a file namely **make_options.mk**. This file allows setting most of these options. This section elaborates more on the application structure and the host application and compute unit interactions and how they are modeled.
+The next thing the host application does is to create OpenCL context, read and load xclbin, and create a command queue with out-of-order execution and profiling enabled. After that OpenCL setup memory allocation is done and the input image is read(or randomly generated). Once the setup is complete "Filter2DDispatcher" object is created and used to dispatch filtering requests on several images. Timers are used to take execution time measurement for both software and hardware execution. Finally, the host application prints the summary of performance results. Most of the heavy lifting is done by "**Filter2DDispatcher**" and **Filter2DRequest**. These classes manage and coordinate the execution of filtering operations on multiple compute units. Both of the host versions are based on these classes. The next section elaborates on these classes.
 
 ### 2D Filtering Requests
-Both versions of the host application contain a class named "**Filter2DRequest**", which is used by the filtering request dispatcher class discussed in the next section. An object of this class essentially allocates and holds handles to OpenCL resources needed for enqueueing 2-D convolution filtering requests. An object of this class encapsulates a single request that is enough to process a single color component for a given image. These resources include OpenCL Buffers, Event Lists, and Handles to Kernel, and Command Queue. The application creates a single command queue that is passed down to enqueue every kernel enqueue command. Once an object of Filter2DRequest class is created, it can be used to make an API call namely "**Filter2D**" that will enqueue all the operations. Such as moving input data or filter coefficients, kernel calls, and reading of output data back to the host. The same API call will create a list of dependencies between these transfers and create an output event that signals the completion of output data transfer to the host.
+Both versions of the host application contain a class named "**Filter2DRequest**", which is used by the filtering request dispatcher class discussed in the next section. An object of this class essentially allocates and holds handles to OpenCL resources needed for enqueueing 2-D convolution filtering requests. An object of this class encapsulates a single request that is enough to process a single color component for a given image. These resources include OpenCL buffers, event Lists, and handles to kernel and command queue. The application creates a single command queue that is passed down to enqueue every kernel enqueue command. Once an object of Filter2DRequest class is created, it can be used to make an API call namely "**Filter2D**" that will enqueue all the operations. Such as moving input data or filter coefficients, kernel calls, and reading of output data back to the host. The same API call will create a list of dependencies between these transfers and also creates an output event that signals the completion of output data transfer to the host.
 
 ### 2D Filter Dispatcher
-The "**Filter2DDispatcher**" class is the top-level class that provides an end-user API to schedule Kernel calls. Every call schedules a kernel enqueue and related data transfers using Filter2DRequest object as explained in the previous section. This is a container class that essentially holds a vector of requests objects. The number of **Filter2DRequest** objects that are instantiated is defined as the "max" parameter for the dispatcher class at construction time. The minimum value of this parameter can be as small as the number of compute units to allow at least one kernel enqueue call per compute unit to happen in parallel. But a larger value is desired since it will allow overlap between input and output data transfers happening between host and device. It won't produce any overlap between compute for different images or image color channels larger than the total number of compute units built in the xclbin.
+The "**Filter2DDispatcher**" class is the top-level class that provides an end-user API to schedule Kernel calls. Every call schedules a kernel enqueue and related data transfers using Filter2DRequest object as explained in the previous section. This is a container class that essentially holds a vector of requests objects. The number of **Filter2DRequest** objects that are instantiated is defined as the "max" parameter for the dispatcher class at construction time. The minimum value of this parameter can be as small as the number of compute units to allow at least one kernel enqueue call per compute unit to happen in parallel. But a larger value is desired since it will allow overlap between input and output data transfers happening between host and device. 
 
 ### Building Host Application
-The host application can be built using the makefile that is provided with the tutorial. As mentioned earlier host application has two versions, one version takes input images to process the other one can generate random data that will be processed as images. Top-level Makefile includes a file called "**make_options.mk**" this file provides most of the options that can be used as knobs to generate different host builds and kernel versions for emulation modes. It also provides a way to launch emulation with a specific number of test images. The details of the options provided by this file are as follows:
+The host application can be built using the makefile that is provided with the tutorial. As mentioned earlier host application has two versions, one version takes input images to process the other one can generate random data that will be processed as images. Top-level Makefile includes a file called "**make_options.mk**". This file provides most of the options that can be used as knobs to generate different host builds and kernel versions for emulation modes. It also provides a way to launch emulation with a specific number of test images. The details of the options provided by this file are as follows:
 
 #### Kernel Build Options
-- TARGET: selects build target choices are hw,sw_emu,hw_emu
+- TARGET: selects build target, the choices are hw,sw_emu,hw_emu
 - PLATFORM: Xilinx platform used for the build  
-- ENABLE_STALL_TRACE : instrument kernel to generate stall info choice are yes, no
-- TRACE_DDR: select memory bank for trace storage choices DDR[0-3] for u200 card.
-- KERNEL_CONFIG_FILE: kernel config file
-- VPP_TEMP_DIRS: temporary log dir for Vitis v++ kernel compiler
-- VPP_LOG_DIRS: log dir for Vitis v++ kernel compiler
-- USE_PRE_BUILT_XCLBIN: enable use of pre-built FPGA binary file
+- ENABLE_STALL_TRACE : instruments kernel to generate stall info choice are: yes, no
+- TRACE_DDR: select memory bank for trace storage choices are DDR[0]-DDR[3] for u200 card.
+- KERNEL_CONFIG_FILE: kernel configuration file
+- VPP_TEMP_DIRS: temporary log directory for Vitis v++ kernel compiler
+- VPP_LOG_DIRS: log directory for Vitis v++ kernel compiler
+- USE_PRE_BUILT_XCLBIN: enables the use of pre-built FPGA binary file
 
 #### Host Build Options
-- ENABLE_PROF: Enable OpenCL profiling for the host application 
-- OPENCV_INCLUDE: OpenCV include folder path
-- OPENCV_LIB: OpenCV lib folder path
+- ENABLE_PROF: Enables OpenCL profiling for the host application 
+- OPENCV_INCLUDE: OpenCV include directory path
+- OPENCV_LIB: OpenCV lib directory path
 
 #### Application Runtime Options
-- FILTER_TYPE: selects between 6 different filter type choice are 0-5
+- FILTER_TYPE: selects between 6 different filter types: choices are 0-5
 - PARALLEL_ENQ_REQS: application command-line argument for parallel enqueued requests
-- NUM_IMAGES: Number of images to process
+- NUM_IMAGES: number of images to process
 - IMAGE_WIDTH: image width to use
 - IMAGE_HEIGHT: image height to use 
-- INPUT_TYPE: select between host versions
+- INPUT_TYPE: selects between host versions
 - INPUT_IMAGE: path and name of image file
 - PROFILE_ALL_IMAGES: while comparing CPU vs. FPGA use all images or not
 - NUM_IMAGES_SW_EMU: sets no. of images to use for sw_emu
@@ -100,7 +100,7 @@ Once the **make_options.mk** is opened make sure **INPUT_TYPE** is set as "rando
 INPUT_TYPE :=random
 ```
 
-If it is required to built host that uses input image please set the following two variables that point to **OpenCV 2.4 ** install path in make_options.mk file:
+If it is required to built host that uses given input image please set the following two variables that point to **OpenCV 2.4 ** install path in make_options.mk file:
 
 ```makefile
 ############## OpenCV Installation Paths
@@ -119,7 +119,7 @@ make compile_host
 It will build host.exe inside a build folder. By building host alone one can make sure if host code compiles fine and all library paths are set correctly.
 
 ## Running Software Emulation
-To build and run the kernel in software emulation please proceed as follows:
+To build and run the kernel in software emulation mode please proceed as follows:
 Open "make_options.mk" and make sure that the target is set to sw_emu:
 ```bash
 TARGET ?=sw_emu
@@ -199,10 +199,10 @@ Launch emulation using the following command:
 make run
 ```
 
-It will build the hardware kernel in emulation mode and then launch the host application. The output printed in the console window will be similar to the sw_emu case. But after hw_emu you can analyze different synthesis reports and using Vitis_analyzer view different waveforms. For more details please refer to other [Vitis Tutorials](https://github.com/Xilinx/Vitis-Tutorials)
+It will build the hardware kernel in emulation mode and then launch the host application. The output printed in the console window will be similar to the sw_emu case. But after hardware emulation, you can analyze different synthesis reports and using Vitis Analyzer view different waveforms. For more details please refer to other [Vitis Tutorials](https://github.com/Xilinx/Vitis-Tutorials)
 
 ## Building Kernel Xclbin
-Once the kernel functionality is verified and its resource usage is satisfactory (as a single module as synthesized in the previous lab) kernel build process can be started. The kernel build process will create an xclbin file which is an FPGA executable file that can be read and loaded by the host to the FPGA card. Since building xclbin takes few hours and to avoid such a delay in this lab a built-in xclbin file is provided in a folder called "xclbin". During hardware run by default, a pre-built xclbin file will be used. But if it is required to build a new xclbin please set the following options in make_options.mk file as shown below:
+Once the kernel functionality is verified and its resource usage is satisfactory (as a single module as synthesized in the previous lab) kernel build process can be started. The kernel build process will create an xclbin file. This is an FPGA executable file that can be read and loaded by the host to the FPGA card. Building xclbin takes few hours and to avoid such a delay in this lab a built-in xclbin file is provided in a folder called "xclbin". During hardware run by default, a pre-built xclbin file will be used. But if it is required to build a new xclbin please set the following options in make_options.mk file as shown below:
 
 ```bash
 USE_PRE_BUILT_XCLBIN := 0
@@ -284,24 +284,24 @@ vitis_analyzer ./build/fpgabinary.xclbin.run_summary
 
 Once Vitis Analyzer GUI opens, from the left side pan select **Profile Summary** and then select **Compute Unit Utilization** from the window that is open on the right-hand side. It will bring stats about the measured performance of the compute unit. We have built xclbin with 3 compute units so it will show three rows in a tabular format as shown below:
     ![](images/cuPerf.jpg) 
-From this table, it can be easily seen that the kernel compute time is almost 7 ms, almost equal to the estimated kernel latency in the previous lab. Another important measurement is the compute unit utilization which is very close to 100 percent, essentially meaning that the host was able to feed data to compute units through PCIe continuously. In other words, the host PICe bandwidth was sufficient, and compute units never saturated it. This fact can also be observed by having look at host bandwidth utilization. To see this select "Host Data Transfers" and a table shown in the figure below will be displayed with other details also.
+From this table, it can be easily seen that the kernel compute time is almost 7 ms, almost equal to the estimated kernel latency in the previous lab. Another important measurement is the compute unit utilization which is very close to 100 percent, essentially meaning that the host was able to feed data to compute units through PCIe continuously. In other words, the host PICe bandwidth was sufficient, and compute units never saturated it. This fact can also be observed by having a look at the host bandwidth utilization. To see this select "Host Data Transfers" and a table shown in the figure below will be displayed with other details also.
     ![](images/bwUtil.jpg)
- From these numbers, it is clear that host bandwidth is not fully utilized. Similarly by selecting **Kernel Data Transfers** it can be seen as shown in the figure below how much bandwidth is utilized between the kernel and device DDR memory. We have used a single bank for all the compute units.
+ From these numbers, it is clear that the host bandwidth is not fully utilized. Similarly by selecting **Kernel Data Transfers** it can be seen as shown in the figure below how much bandwidth is utilized between the kernel and the device DDR memory. We have used a single bank for all the compute units.
     ![](images/bwKernel.jpg)
  #### Application Timeline
-Application timeline can also be used to have a look at performance parameters like compute unit latency per invocation and the bandwidth utilization. To open application time select **Application Timeline** from the left-most pan, it will bring the application timeline in the right side window. Now zoom in appropriately and go to device-side trace. For any compute unit hover your mouse on any transaction in "Row 0" a tooltip will show compute start and end times and also the latency. This should be similar to what we saw in the last section.
+Application timeline can also be used to have a look at performance parameters like compute unit latency per invocation and bandwidth utilization. To open application time select **Application Timeline** from the left-most pan, it will bring the application timeline in the right side window. Now zoom in appropriately and go to device-side trace. For any compute unit hover your mouse on any transaction in "Row 0" a tooltip will show compute start and end times and also the latency. This should be similar to what we saw in the last section.
     ![](images/cuTime.jpg)
  
  Another important thing to observe is the host data transfer trace as shown below. From this trace, it can be easily seen that the host read and write bandwidth is not fully utilized there are gaps, showing there are no read/write transactions happening. The most important thing to note is that these gaps are significant, highlighting the fact that a fraction of host PCIe bandwidth is utilized.
  
    ![](images/hostTrace.jpg)
     
- From the above discussion and given that U200 has multiple DDR banks, it is clear that we can improve overall throughput further. By having more compute units that can accelerate a single video stream to increase throughput or can be used to process multiple video streams. The next tutorial [Accelerating Compute Intensive Video Filtering Application using Multi-threading/Multiple Processes](../computeIntensive/ReadMe.md) considers this topic in detail.
+ From the above discussion and given that U200 has multiple DDR banks, it is clear that we can improve overall throughput further. By having more compute units that can accelerate a single video stream to increase throughput or can be used to process multiple video streams. The next tutorial [Accelerating Compute Intensive Video Filtering Application using Multi-threading/Multiple Processes](../computeIntensive/ReadMe.md) will consider this topic.
  
- In this lab you have learned:
+ In this lab you have learned: 
 - How to build, run and analyze the performance of a video filter
-- The estimated kernel performance and measured correlate very well 
- 
+- How to estimate kernel performance and compare with measured performance
+
  ---------------------------------------
 
 <p align="center"><b>
