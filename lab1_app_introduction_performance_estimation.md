@@ -159,7 +159,7 @@ Acceleration Factor to Meet SW Performance    = 14.5/1.33 = 10.9x
 ### Performance Estimation for Optimized Hardware Implementation
 From the above calculations, it is clear that we need to improve the performance of baseline hardware implementation by 280x to meet the required performance. One of the paths we can take is to start unrolling the inner loops and pipeline. For example by unrolling the innermost loop which iterates 15 times we can improve the performance by 15x. With that, the performance will be better than software-only implementation but still, we cannot meet the required video performance. Another approach that we can follow is to unroll the inner two loops and hence gain in performance by 15*15=225 which means a throughput of 1-output pixel per cycle. The performance and memory bandwidth requirements will be as follows:
 ```bash
-    Throughput  = Fmax/(Pixels produced per cycle) = 300/1 = 300 MB/s
+    Throughput  = Fmax * Pixels produced per cycle = 300 * 1 = 300 MB/s
     Output Memory Bandwidth = Fmax * Pixels produced per cycle =  300 MB/s
     Input Memory Bandwidth = Fmax * Input pixels read per output pixel = 300 * 225 = 67.5 GB/s
 ```
