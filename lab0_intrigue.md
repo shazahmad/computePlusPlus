@@ -56,7 +56,7 @@ CPU  Throughput   :    12.7112 MB/s
 
 ## Running FPGA Accelerated Application
 ### Launching the Host Application
-Now launch the application which uses FPGA accelerated video convolution filter.
+Now launch the application which uses FPGA accelerated video convolution filter. The application will be run on actual FPGA card also called System Run.
 
 ```bash
 cd REPO_PATH/
