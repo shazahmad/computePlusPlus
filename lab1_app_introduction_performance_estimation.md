@@ -145,7 +145,7 @@ The simplest and straightforward implementation in hardware can be achieved by p
  Hardware Fmax(MHz) = 300
  Throughput  = 300/225 = 1.33 (MPixels/s) =  1.33 MB/s
 ```
-Here the hardware clock frequency is assumed to be 300MHz because in general for U200 Xilinx Alveo Data Center Card this is the maximum supported clock frequency. The performance turns out to be 1.33 MB/s with baseline hardware implementation. From the convolutional filter source code, it can also be estimated how much memory bandwidth is needed at the input and output for achieved throughput. From the convolutional filter source code also shown above it is clear that the inner two loops while calculating a single output pixel performs 225(15*15) reads at the input so:
+Here the hardware clock frequency is assumed to be 300MHz because in general for U200 Xilinx Alveo Data Center Card this is the maximum supported clock frequency when using Vitis HLS based design flow. The performance turns out to be 1.33 MB/s with baseline hardware implementation. From the convolutional filter source code, it can also be estimated how much memory bandwidth is needed at the input and output for achieved throughput. From the convolutional filter source code also shown above it is clear that the inner two loops while calculating a single output pixel performs 225(15*15) reads at the input so:
 ```bash
 Output Memory Bandwidth = Throughput = 1.33 MB/s
 Input Memory Bandwidth  = Throughput * 225 = 300 MB/s
